@@ -1,5 +1,8 @@
 from dotenv import load_dotenv
 
+from typing import List
+from pydantic import BaseModel, Field
+
 load_dotenv()
 from langchain_core.messages import HumanMessage
 from langchain.agents import create_agent
@@ -23,12 +26,22 @@ from langchain_tavily import TavilySearch # tavily has their own search engine d
 #     # return "Munnar is cold place."
 #     return tavily.search(query=query)
 
+class Source(BaseModel):
+    """Schema for a source used by the agent"""
+    url:str= Field(description="The Url of the source")
+
+class AgentResponse(BaseModel):
+    """"Schema for the agent response"""
+    answer:str=Field(description="Agents answer for the query")
+    sources:List[Source]= Field(default_factory=list, description="List of sources to generate the answer")
+
 
 llm =ChatOpenAI(model="gpt-5")
 # tool=[search]
 
 tool=[TavilySearch()]
-agent=create_agent(model=llm, tools=tool)
+# agent=create_agent(model=llm, tools=tool) # without Structured Data code
+agent=create_agent(model=llm, tools=tool, response_format=AgentResponse) #with structured data
 
     
 
